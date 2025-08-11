@@ -37,6 +37,31 @@ regd_users.post("/register", (req,res) => {
     return res.status(404).json({message: "Unable to register user."});
 });
 
+regd_users.delete("/auth/review/:isbn",(req, res)=> {
+    const isbn = req.params.isbn;
+    const username = req.user;
+
+    if (!username) {
+        return res.status(403).json({message: "User not logged in"});
+    }
+
+    if (!books[isbn]){
+        return res.status(404).json({message: "Book not found"});
+    }
+
+    if (!books[isbn].reviews || !books[isbn].reviews[username]) {
+        return res.status(404).json({message:"Review by user not found"});
+    }
+
+    //delete the review for the logged in user
+    delete books [isbn].reviews[username];
+
+    return res.status(200).json({
+        message: "Review deleted successfully",
+        reviews: books[isbn].reviews
+    });
+});
+
 //only registered users can login
 regd_users.post("/login", (req, res) => {
     console.log("Login endpoint hit with: ", req.body);
@@ -50,7 +75,7 @@ regd_users.post("/login", (req, res) => {
 
   if (authenticatedUser(username, password)) {
     // Generate JWT token with username as payload
-    let accessToken = jwt.sign({ data: password }, 'access', { expiresIn: 60 * 60 });
+    let accessToken = jwt.sign({ data: username }, 'access', { expiresIn: 60 * 60 });
 
     // Store token and username in session
     req.session.authorization = { accessToken, username };
@@ -64,8 +89,30 @@ regd_users.post("/login", (req, res) => {
 
 // Add a book review
 regd_users.put("/auth/review/:isbn", (req, res) => {
-  //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
+  const isbn = req.params.isbn;
+  const review = req.query.review;
+  const username = req.user;
+
+  if (!username){
+    return res.status(403).json({message: "User not logged in"});
+  }
+     
+  if (!review){
+    return res.status(400).json({message: "Review query parameter missing"})
+  }
+
+  if (!books[isbn]){
+    return res.status(404).json({message: "Book not found"});
+  }
+
+  if (!books[isbn].reviews){
+    books[isbn].reviews = {};
+  }
+
+  //add or update the review for this username
+  books[isbn].reviews[username] = review;
+  
+  return res.status(200).json({message: "Review successfully added or modified", reviews: books[isbn].reviews });
 });
 
 module.exports.authenticated = regd_users;
