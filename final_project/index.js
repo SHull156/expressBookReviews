@@ -6,6 +6,10 @@ const public_users_routes = require('./router/general.js').public_users;
 
 const app = express();
 
+app.get('/test', (req, res) => {
+  res.send("Test route works!");
+});
+
 app.use((req, res, next) => {
   console.log(`Incoming request: ${req.method} ${req.url}`);
   next();

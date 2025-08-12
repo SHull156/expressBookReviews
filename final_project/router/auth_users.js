@@ -29,7 +29,7 @@ regd_users.post("/register", (req,res) => {
         //check if the user does not already exist
         if (!doesExist(username)) {
             users.push({"username": username, "password": password});
-            return res.status(200).json({message:"User successfully registered. Now you can login"});
+            return res.status(200).json({message:"Customer successfully registered. Now you can login"});
         } else {
             return res.status(404).json({message: "User already exists"});
         }
@@ -37,30 +37,31 @@ regd_users.post("/register", (req,res) => {
     return res.status(404).json({message: "Unable to register user."});
 });
 
-regd_users.delete("/auth/review/:isbn",(req, res)=> {
-    const isbn = req.params.isbn;
-    const username = req.user;
+regd_users.delete("/auth/review/:isbn", (req, res) => {
+  const isbn = req.params.isbn;
+  const username = req.user;
 
-    if (!username) {
-        return res.status(403).json({message: "User not logged in"});
-    }
+  if (!username) {
+    return res.status(403).json({ message: "User not logged in" });
+  }
 
-    if (!books[isbn]){
-        return res.status(404).json({message: "Book not found"});
-    }
+  if (!books[isbn]) {
+    return res.status(404).json({ message: "Book not found" });
+  }
 
-    if (!books[isbn].reviews || !books[isbn].reviews[username]) {
-        return res.status(404).json({message:"Review by user not found"});
-    }
+  if (!books[isbn].reviews || !books[isbn].reviews[username]) {
+    return res.status(404).json({ message: "Review by user not found" });
+  }
 
-    //delete the review for the logged in user
-    delete books [isbn].reviews[username];
+  // Delete the review for the logged in user
+  delete books[isbn].reviews[username];
 
-    return res.status(200).json({
-        message: "Review deleted successfully",
-        reviews: books[isbn].reviews
-    });
+  return res.status(200).json({
+    message: `Review for the ISBN ${isbn} posted by ${username} has been deleted.`,
+    reviews: books[isbn].reviews
+  });
 });
+
 
 //only registered users can login
 regd_users.post("/login", (req, res) => {
@@ -80,7 +81,7 @@ regd_users.post("/login", (req, res) => {
     // Store token and username in session
     req.session.authorization = { accessToken, username };
 
-    return res.status(200).json({ message: "User successfully logged in" });
+    return res.status(200).json({ message: "Customer successfully logged in" });
   } else {
     return res.status(401).json({ message: "Invalid login. Check username and password" });
   }
@@ -112,7 +113,10 @@ regd_users.put("/auth/review/:isbn", (req, res) => {
   //add or update the review for this username
   books[isbn].reviews[username] = review;
   
-  return res.status(200).json({message: "Review successfully added or modified", reviews: books[isbn].reviews });
+    return res.status(200).json({
+    message: `The review for book ${isbn} has been added/updated by ${username}: "${review}"`,
+    reviews: books[isbn].reviews
+});
 });
 
 module.exports.authenticated = regd_users;
